@@ -1,0 +1,13 @@
+Sons d'interface personnalisés (.ogg ou .mp3, 5 Mo maximum).
+
+Dépose ici un fichier par son, avec exactement ces noms :
+  click   : clic des boutons
+  toggle  : cases à cocher
+  success : action réussie (installation, connexion...)
+  error   : erreur
+
+Exemples : click.ogg, success.mp3
+
+Le plus simple reste Réglages > Sons de l'interface : le bouton « Choisir… » copie ton fichier
+dans le dossier des sons de ton profil (il survit aux mises à jour et fonctionne aussi avec la version installée).
+Si un son existe dans les deux endroits, celui du profil utilisateur est prioritaire.

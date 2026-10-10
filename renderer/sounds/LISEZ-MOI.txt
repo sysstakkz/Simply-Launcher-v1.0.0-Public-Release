@@ -1,0 +1,3 @@
+Les sons personnalisés se placent désormais dans le sous-dossier « custom » (voir custom/LISEZ-MOI.txt)
+ou se choisissent dans Réglages > Sons de l'interface.
+Les fichiers click/toggle/success/error (.ogg ou .mp3) déposés ici (emplacement de la v1.1) restent pris en charge.

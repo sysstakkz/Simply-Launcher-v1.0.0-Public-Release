@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' slbg: data: https://cdn.modrinth.com; media-src 'self' slbg:">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Simply Launcher</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <canvas id="bg" aria-hidden="true"></canvas>
+  <div id="bg-img" class="bg-img" aria-hidden="true"></div>
+  <video id="bg-video" class="bg-video" muted loop playsinline disablepictureinpicture tabindex="-1" aria-hidden="true"></video>
+  <div class="veil" aria-hidden="true"></div>
+
+  <div class="app">
+    <aside class="side">
+      <h1 class="brand">Simply Launcher</h1>
+
+      <nav class="nav" aria-label="Sections">
+        <button type="button" data-view="play" class="on">Jouer</button>
+        <button type="button" data-view="profiles">Profils</button>
+        <button type="button" data-view="mods">Mods</button>
+        <button type="button" data-view="packs">Packs de textures</button>
+        <button type="button" data-view="wiki">Wiki</button>
+        <button type="button" data-view="settings">Réglages</button>
+      </nav>
+
+      <section class="account">
+        <h2>Compte</h2>
+        <div class="seg" role="group" aria-label="Type de compte">
+          <button id="tab-offline" type="button" data-mode="offline">Hors ligne</button>
+          <button id="tab-ms" type="button" data-mode="microsoft">Licence</button>
+        </div>
+
+        <div id="pane-offline">
+          <label for="username">Pseudo</label>
+          <input id="username" maxlength="16" placeholder="Steve" autocomplete="off" spellcheck="false">
+          <p class="hint">3 à 16 caractères : lettres, chiffres et _</p>
+        </div>
+
+        <div id="pane-ms" hidden>
+          <p id="ms-state" class="hint">Aucun compte connecté.</p>
+          <button id="ms-login" type="button" class="btn">Se connecter</button>
+          <button id="ms-logout" type="button" class="btn ghost" hidden>Déconnecter</button>
+        </div>
+      </section>
+    </aside>
+
+    <main class="main">
+      <!-- Jouer -->
+      <section id="view-play" class="view">
+        <div class="card">
+          <label for="instance" class="label">Build</label>
+          <div class="row">
+            <select id="instance"></select>
+            <button id="inst-new" type="button" class="btn">Nouveau</button>
+            <button id="inst-edit" type="button" class="btn ghost">Modifier</button>
+            <button id="inst-del" type="button" class="btn ghost">Supprimer</button>
+          </div>
+          <p id="inst-summary" class="summary"></p>
+
+          <label class="check"><input type="checkbox" id="quick-perf"> Mode perfs (arguments JVM optimisés, G1GC)</label>
+
+          <div id="ram-hint" class="hint-box" hidden>
+            <span id="ram-hint-text"></span>
+            <button id="ram-apply" type="button" class="btn ghost">Appliquer</button>
+          </div>
+
+          <div class="row">
+            <button id="open-game-dir" type="button" class="btn ghost">Dossier du build</button>
+            <button id="open-mods" type="button" class="btn ghost">Dossier des mods</button>
+          </div>
+        </div>
+
+        <div class="play">
+          <p id="status" class="status" role="status" aria-live="polite">Prêt.</p>
+          <div class="bar" aria-hidden="true"><div id="bar-fill"></div></div>
+          <div class="play-row">
+            <button id="play" type="button" class="play-btn">Jouer</button>
+            <button id="console-toggle" type="button" class="btn ghost">Console</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Profils de mods -->
+      <section id="view-profiles" class="view" hidden>
+        <h2 class="view-title">Profils de mods</h2>
+        <p id="profiles-context" class="hint"></p>
+        <p class="hint">Mode hybride : coche plusieurs profils. Les mods en double ou incompatibles sont fusionnés et retirés automatiquement.</p>
+        <div id="profile-cards" class="profile-grid"></div>
+        <div class="row">
+          <button id="profiles-preview" type="button" class="btn">Analyser la sélection</button>
+          <button id="profiles-install" type="button" class="btn primary">Installer la sélection</button>
+        </div>
+        <p id="profiles-msg" class="hint" role="status"></p>
+        <div id="profiles-plan" class="card" hidden></div>
+      </section>
+
+      <!-- Mods -->
+      <section id="view-mods" class="view" hidden>
+        <h2 class="view-title">Mods Modrinth</h2>
+        <p id="mods-context" class="hint"></p>
+        <div class="row">
+          <input id="mod-query" placeholder="Rechercher un mod (ex. Sodium, Lithium, Iris…)" autocomplete="off">
+          <button id="mod-search" type="button" class="btn">Rechercher</button>
+        </div>
+        <p id="mods-msg" class="hint" role="status"></p>
+        <ul id="mod-results" class="list"></ul>
+
+        <h3 class="sub-title">Installés dans ce build</h3>
+        <ul id="mod-installed" class="list compact"></ul>
+      </section>
+
+      <!-- Packs de textures -->
+      <section id="view-packs" class="view" hidden>
+        <h2 class="view-title">Packs de textures</h2>
+        <p id="packs-msg" class="hint" role="status"></p>
+        <div class="row">
+          <button id="pack-add" type="button" class="btn">Ajouter un pack (.zip)</button>
+          <button id="pack-folder" type="button" class="btn ghost">Ouvrir le dossier</button>
+        </div>
+        <div class="two-cols">
+          <div>
+            <h3 class="sub-title">Actifs (priorité haute en haut)</h3>
+            <ul id="packs-active" class="list compact"></ul>
+          </div>
+          <div>
+            <h3 class="sub-title">Disponibles</h3>
+            <ul id="packs-available" class="list compact"></ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- Wiki -->
+      <section id="view-wiki" class="view wide" hidden>
+        <h2 class="view-title">Wiki</h2>
+        <input id="wiki-search" type="search" placeholder="Rechercher dans le wiki…" autocomplete="off" aria-label="Rechercher dans le wiki">
+        <div class="wiki">
+          <nav id="wiki-nav" class="wiki-nav" aria-label="Fiches du wiki"></nav>
+          <article id="wiki-body" class="card wiki-body"></article>
+        </div>
+      </section>
+
+      <!-- Réglages -->
+      <section id="view-settings" class="view" hidden>
+        <h2 class="view-title">Réglages</h2>
+
+        <div class="card">
+          <h3 class="sub-title">Apparence</h3>
+          <span class="label" id="accent-label">Couleur d’accentuation</span>
+          <div class="picker" role="group" aria-labelledby="accent-label">
+            <input id="accent-color" type="color" value="#f2c14e" aria-label="Sélecteur de couleur">
+            <label class="field">HEX <input id="accent-hex" maxlength="7" spellcheck="false" autocomplete="off" placeholder="#f2c14e"></label>
+            <label class="field">R <input id="accent-r" type="number" min="0" max="255" step="1"></label>
+            <label class="field">G <input id="accent-g" type="number" min="0" max="255" step="1"></label>
+            <label class="field">B <input id="accent-b" type="number" min="0" max="255" step="1"></label>
+            <button id="accent-reset" type="button" class="btn ghost">Par défaut</button>
+          </div>
+
+          <label for="panorama" class="label">Arrière-plan</label>
+          <div class="row">
+            <select id="panorama">
+              <option value="blocks">Panorama animé (blocs)</option>
+              <option value="images">Mes images</option>
+              <option value="video">Vidéo (.mp4)</option>
+              <option value="off">Aucun</option>
+            </select>
+            <button id="bg-open" type="button" class="btn ghost">Dossier des fonds</button>
+          </div>
+          <div id="video-row" class="row" hidden>
+            <select id="video-select" aria-label="Vidéo de fond"></select>
+            <button id="video-add" type="button" class="btn">Ajouter une vidéo (.mp4)</button>
+            <button id="video-open" type="button" class="btn ghost">Dossier des vidéos</button>
+          </div>
+          <p id="bg-hint" class="hint"></p>
+
+          <label class="check"><input type="checkbox" id="blur"> Effet de flou « verre dépoli » (désactive-le si ton PC est juste)</label>
+        </div>
+
+        <div class="card">
+          <h3 class="sub-title">Sons de l’interface</h3>
+          <label class="check"><input type="checkbox" id="sounds"> Effets sonores de l’interface</label>
+          <p class="hint">Remplace chaque son par ton fichier .ogg ou .mp3 (5 Mo maximum). Tu peux aussi déposer click, toggle, success ou error dans le dossier des sons ou dans <code>renderer/sounds/custom/</code>.</p>
+          <ul id="sound-slots" class="list compact"></ul>
+          <div class="row">
+            <button id="sound-folder" type="button" class="btn ghost">Ouvrir le dossier des sons</button>
+          </div>
+          <p id="sound-msg" class="hint" role="status"></p>
+        </div>
+
+        <div class="card">
+          <h3 class="sub-title">Performance</h3>
+          <label class="check"><input type="checkbox" id="eco"> Mode éco : alléger le launcher quand le jeu tourne</label>
+          <label class="check"><input type="checkbox" id="hwaccel"> Accélération matérielle de l’interface</label>
+          <p class="hint">Le changement d’accélération matérielle s’applique au prochain démarrage du launcher.</p>
+
+          <label for="java" class="label">Chemin de Java (vide : Java du système)</label>
+          <input id="java" placeholder="C:\Program Files\Java\jdk-21\bin\java.exe" spellcheck="false">
+          <p id="sys-info" class="hint"></p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Console -->
+  <section id="console" class="console" hidden aria-label="Console du jeu">
+    <header>
+      <strong>Console</strong>
+      <span class="spacer"></span>
+      <button id="log-copy-error" type="button" class="btn ghost">Copier l’erreur</button>
+      <button id="log-copy" type="button" class="btn ghost">Tout copier</button>
+      <button id="log-open" type="button" class="btn ghost">Dossier des logs</button>
+      <button id="log-clear" type="button" class="btn ghost">Vider</button>
+      <button id="log-close" type="button" class="btn ghost">Fermer</button>
+    </header>
+    <pre id="log" tabindex="0"></pre>
+  </section>
+
+  <!-- Créer / modifier un build -->
+  <dialog id="inst-dialog">
+    <h2 id="inst-dialog-title">Nouveau build</h2>
+    <label for="f-name" class="label">Nom</label>
+    <input id="f-name" maxlength="40" autocomplete="off">
+
+    <span class="label" id="f-loader-label">Type de jeu</span>
+    <div class="seg" role="group" aria-labelledby="f-loader-label">
+      <button id="f-loader-vanilla" type="button" data-floader="vanilla">Vanilla</button>
+      <button id="f-loader-fabric" type="button" data-floader="fabric">Fabric</button>
+    </div>
+
+    <label for="f-version" class="label">Version de Minecraft</label>
+    <select id="f-version"></select>
+
+    <label for="f-ram" class="label">Mémoire : <output id="f-ram-out">4</output> Go</label>
+    <input id="f-ram" type="range" min="1" max="16" step="1" value="4">
+
+    <label class="check"><input type="checkbox" id="f-perf"> Mode perfs (G1GC optimisé)</label>
+
+    <label for="f-jvm" class="label">Arguments JVM supplémentaires (facultatif)</label>
+    <input id="f-jvm" placeholder="-Dfml.ignoreInvalidMinecraftCertificates=true" spellcheck="false">
+
+    <p id="f-error" class="status error" role="alert"></p>
+    <div class="row end">
+      <button id="f-cancel" type="button" class="btn ghost">Annuler</button>
+      <button id="f-save" type="button" class="btn primary">Enregistrer</button>
+    </div>
+  </dialog>
+
+  <!-- Assistant de crash -->
+  <dialog id="crash-dialog">
+    <h2 id="crash-title">Minecraft a planté</h2>
+    <p id="crash-text"></p>
+    <div id="crash-mods-box" hidden>
+      <h3 class="sub-title">Mods concernés</h3>
+      <ul id="crash-mods" class="plain"></ul>
+    </div>
+    <div id="crash-details-box" hidden>
+      <h3 class="sub-title">Détails</h3>
+      <ul id="crash-details" class="plain mono"></ul>
+    </div>
+    <h3 class="sub-title">Que faire ?</h3>
+    <ul id="crash-tips" class="plain"></ul>
+    <div class="row end">
+      <button id="crash-copy" type="button" class="btn ghost">Copier le rapport</button>
+      <button id="crash-console" type="button" class="btn ghost">Voir la console</button>
+      <button id="crash-close" type="button" class="btn primary">Fermer</button>
+    </div>
+  </dialog>
+
+  <script src="sound.js"></script>
+  <script src="background.js"></script>
+  <script src="wiki.js"></script>
+  <script src="renderer.js"></script>
+</body>
+</html>
